@@ -322,6 +322,12 @@ namespace Microsoft.PowerShell
         public Action<CommandAst> CommandValidationHandler { get; set; }
 
         /// <summary>
+        /// This handler is called after a line has genuinely been accepted (submitted),
+        /// never when Enter just inserted a newline to continue editing.
+        /// </summary>
+        public Action<string, int> LineAcceptedHandler { get; set; }
+
+        /// <summary>
         /// Most commands do not accept script blocks, but for those that do,
         /// we want to validate commands in the script block arguments.
         /// Unfortunately, we can't know how the argument is used.  In the worst
@@ -690,6 +696,9 @@ namespace Microsoft.PowerShell
         }
         private Action<CommandAst> _commandValidationHandler;
         internal bool _commandValidationHandlerSpecified;
+
+        [Parameter]
+        public Action<string, int> LineAcceptedHandler { get; set; }
 
         [Parameter]
         public SwitchParameter HistorySearchCursorMovesToEnd

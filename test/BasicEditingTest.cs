@@ -20,6 +20,39 @@ namespace Test
         }
 
         [SkippableFact]
+        public void LineAcceptedHandlerAPI()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            int callCount = 0;
+            string acceptedText = null;
+            int acceptedCursor = -1;
+            PSConsoleReadLine.SetOptions(new SetPSReadLineOption
+            {
+                LineAcceptedHandler = (text, cursor) =>
+                {
+                    callCount++;
+                    acceptedText = text;
+                    acceptedCursor = cursor;
+                }
+            });
+
+            // Unclosed paren is incomplete input - Enter just inserts a newline and keeps
+            // editing, so the handler must not fire yet.
+            Test("(1+1\n)", Keys(
+                "(1+1",
+                _.Enter,
+                CheckThat(() => Assert.Equal(0, callCount)),
+                ")"));
+
+            // The trailing Enter that Keys() adds automatically now submits a complete,
+            // balanced statement, so the handler must have fired exactly once.
+            Assert.Equal(1, callCount);
+            Assert.Equal("(1+1\n)", acceptedText);
+            Assert.Equal("(1+1\n)".Length, acceptedCursor);
+        }
+
+        [SkippableFact]
         public void RevertLine()
         {
             // Add one test for chords

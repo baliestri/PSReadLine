@@ -389,6 +389,7 @@ namespace Microsoft.PowerShell
             _prediction.ActiveView.Clear(cursorAtEol: true);
 
             _console.Write("\n");
+            _options.LineAcceptedHandler?.Invoke(_buffer.ToString(), _current);
             _inputAccepted = true;
             return true;
         }

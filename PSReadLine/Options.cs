@@ -122,6 +122,10 @@ namespace Microsoft.PowerShell
                 }
                 Options.ViModeChangeHandler = options.ViModeChangeHandler;
             }
+            if (options.LineAcceptedHandler != null)
+            {
+                Options.LineAcceptedHandler = options.LineAcceptedHandler;
+            }
             if (options.HistorySavePath != null)
             {
                 Options.HistorySavePath = options.HistorySavePath;
