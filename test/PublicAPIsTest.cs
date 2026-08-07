@@ -91,6 +91,22 @@ namespace Test
         }
 
         [SkippableFact]
+        public void GetInitialCursorPositionAPI()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            var prompt = "PS> ";
+            Test("echo", Keys(
+                CheckThat(() =>
+                {
+                    PSConsoleReadLine.GetInitialCursorPosition(out var x, out var y);
+                    Assert.Equal(prompt.Length, x);
+                    Assert.Equal(0, y);
+                }),
+                "echo"), prompt);
+        }
+
+        [SkippableFact]
         public void GetSelectionStateAPI()
         {
             TestSetup(KeyMode.Cmd);

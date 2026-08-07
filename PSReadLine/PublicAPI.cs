@@ -187,6 +187,15 @@ namespace Microsoft.PowerShell
         }
 
         /// <summary>
+        /// Get the console column/row where the current prompt started.
+        /// </summary>
+        public static void GetInitialCursorPosition(out int x, out int y)
+        {
+            x = _singleton._initialX;
+            y = _singleton._initialY;
+        }
+
+        /// <summary>
         /// Get the selection state of the buffer
         /// </summary>
         /// <param name="start">The start of the current selection or -1 if nothing is selected.</param>
