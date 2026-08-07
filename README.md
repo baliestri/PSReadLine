@@ -1,15 +1,41 @@
-[![appveyor-build-status][]][appveyor-build-site]
+# PSLoom.PSReadLine
 
-[appveyor-build-status]: https://ci.appveyor.com/api/projects/status/9mygtkr9fkov47xv/branch/master?svg=true
-[appveyor-build-site]: https://ci.appveyor.com/project/PowerShell/PSReadLine?branch=master
+This is a fork of [`PowerShell/PSReadLine`](https://github.com/PowerShell/PSReadLine), packaged
+and distributed under its own identity, `PSLoom.PSReadLine`. It exists to give
+[PSLoom](https://github.com/baliestri)'s `Hooks` and `SyntaxHighlighting` subsystems extensibility
+points that upstream `PSReadLine` doesn't expose yet.
 
-<!--
-[![azure-build-status][]][azure-build-site]
-[azure-build-status]: https://lzybkr.visualstudio.com/AzurePipelines/_apis/build/status/PSReadLine%20Azure%20Pipeline
-[azure-build-site]: https://lzybkr.visualstudio.com/AzurePipelines/_build/latest?definitionId=6
--->
+The public C# namespace and types (`Microsoft.PowerShell.PSConsoleReadLine`, etc.) are
+**unchanged** from upstream - only the distribution identity (assembly name, module manifest,
+module GUID) is renamed. That is deliberate: it lets PSLoom depend on this fork today, and drop it
+again later for the official module, without touching any call site.
 
-# PSReadLine
+## Why a separate fork instead of waiting on upstream
+
+Each feature added here has a corresponding issue open in this fork, and is intended to also be
+proposed upstream as its own PR:
+
+- [#1 - Expose ScriptBlock on `Get-PSReadLineKeyHandler`](https://github.com/baliestri/PSReadLine/issues/1)
+- [#2 - Expose the initial prompt cursor position](https://github.com/baliestri/PSReadLine/issues/2)
+- [#3 - `LineAcceptedHandler` option](https://github.com/baliestri/PSReadLine/issues/3)
+- [#4 - `TokenColorHandler` option](https://github.com/baliestri/PSReadLine/issues/4)
+
+`PowerShell/PSReadLine` has a real, observed pattern of not engaging with external feature work:
+[upstream issue #3439](https://github.com/PowerShell/PSReadLine/issues/3439) (the direct ask
+behind #4 above) has been open since 2022, with its most recent comment - a plain "would a PR be
+accepted?" - going unanswered; several unrelated feature PRs there have sat for 1-4 months with no
+maintainer engagement, out of 272 open issues at the time of writing. Given that, this fork is
+maintained as its own independent module for as long as needed, not as a stopgap with an assumed
+end date.
+
+If and when a feature here is fully absorbed into an official `PSReadLine` release, that piece of
+the diff is dropped from this fork on the next rebase against upstream `master`, and PSLoom's own
+`RequiredModules` goes back to depending on the official module for whatever was assimilated.
+
+**This fork is not meant to be opened as a PR against `PowerShell/PSReadLine`.** Only the
+individual feature branches behind issues #1-#4 are.
+
+---
 
 This module replaces the command line editing experience of PowerShell for versions 3 and up.
 It provides:
@@ -166,15 +192,16 @@ After build, the produced artifacts can be found at `<your-local-repo-root>/bin/
 
 In order to isolate your imported module to the one locally built, be sure to run 
 `pwsh -NonInteractive -NoProfile` to not automatically load the default PSReadLine module installed.
-Then, load the locally built PSReadLine module by `Import-Module <your-local-repo-root>/bin/Debug/PSReadLine/PSReadLine.psd1`.
+Then, load the locally built module by `Import-Module <your-local-repo-root>/bin/Debug/PSLoom.PSReadLine/PSLoom.PSReadLine.psd1`.
 
 ## Change Log
 
-The change log is available [here](https://github.com/PowerShell/PSReadLine/blob/master/PSReadLine/Changes.txt).
+The change log is available [here](https://github.com/baliestri/PSReadLine/blob/fork/PSReadLine/Changes.txt).
+This fork's own changes are tracked as issues [#1](https://github.com/baliestri/PSReadLine/issues/1)-[#5](https://github.com/baliestri/PSReadLine/issues/5).
 
 ## Licensing
 
-PSReadLine is licensed under the [2-Clause BSD License][].
+PSLoom.PSReadLine is licensed under the [2-Clause BSD License][], same as upstream `PSReadLine`.
 
 ## Code of Conduct
 
