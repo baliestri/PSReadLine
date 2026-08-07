@@ -341,6 +341,7 @@ namespace Microsoft.PowerShell
                         Function = entry.Value.BriefDescription,
                         Description = entry.Value.LongDescription,
                         Group = GetDisplayGrouping(entry.Value.BriefDescription),
+                        ScriptBlock = entry.Value.ScriptBlock,
                     };
                 }
             }
@@ -364,6 +365,7 @@ namespace Microsoft.PowerShell
                             Function = entry.Value.BriefDescription,
                             Description = entry.Value.LongDescription,
                             Group = GetDisplayGrouping(entry.Value.BriefDescription),
+                            ScriptBlock = entry.Value.ScriptBlock,
                         };
                     }
                 }
@@ -382,6 +384,7 @@ namespace Microsoft.PowerShell
                             Function = secondEntry.Value.BriefDescription,
                             Description = secondEntry.Value.LongDescription,
                             Group = GetDisplayGrouping(secondEntry.Value.BriefDescription),
+                            ScriptBlock = secondEntry.Value.ScriptBlock,
                         };
                     }
                 }
@@ -407,6 +410,7 @@ namespace Microsoft.PowerShell
                                 Function = secondEntry.Value.BriefDescription,
                                 Description = secondEntry.Value.LongDescription,
                                 Group = GetDisplayGrouping(secondEntry.Value.BriefDescription),
+                                ScriptBlock = secondEntry.Value.ScriptBlock,
                             };
                         }
                     }
@@ -471,6 +475,7 @@ namespace Microsoft.PowerShell
                             Function = entry.BriefDescription,
                             Description = entry.LongDescription,
                             Group = GetDisplayGrouping(entry.BriefDescription),
+                            ScriptBlock = entry.ScriptBlock,
                         };
                     }
                     else
@@ -485,6 +490,7 @@ namespace Microsoft.PowerShell
                                 Function = entry.BriefDescription,
                                 Description = entry.LongDescription,
                                 Group = GetDisplayGrouping(entry.BriefDescription),
+                                ScriptBlock = entry.ScriptBlock,
                             };
                         }
                     }
@@ -508,6 +514,7 @@ namespace Microsoft.PowerShell
                                 Function = entry.BriefDescription,
                                 Description = entry.LongDescription,
                                 Group = GetDisplayGrouping(entry.BriefDescription),
+                                ScriptBlock = entry.ScriptBlock,
                             };
                         }
                         else
@@ -527,6 +534,7 @@ namespace Microsoft.PowerShell
                                     Function = entry.BriefDescription,
                                     Description = entry.LongDescription,
                                     Group = GetDisplayGrouping(entry.BriefDescription),
+                                    ScriptBlock = entry.ScriptBlock,
                                 };
                             }
                         }

@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Management.Automation;
 using Microsoft.PowerShell;
 using Xunit;
 
@@ -60,6 +61,25 @@ namespace Test
         {
             TestSetup(KeyMode.Cmd);
             Test("", Keys("aaa", _.Shift_Escape));
+        }
+
+        [SkippableFact]
+        public void GetKeyHandlersExposesScriptBlock()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            var scriptBlock = ScriptBlock.Create("param($key, $arg) Write-Host 'hi'");
+            PSConsoleReadLine.SetKeyHandler(new[] { "ctrl+x,ctrl+y" }, scriptBlock, "TestScriptBlockHandler", null);
+
+            var handlers = PSConsoleReadLine.GetKeyHandlers(Chord: new[] { "ctrl+x,ctrl+y" });
+            var handler = Assert.Single(handlers);
+            Assert.Equal(scriptBlock, handler.ScriptBlock);
+
+            var builtinHandlers = PSConsoleReadLine.GetKeyHandlers(Chord: new[] { "home" });
+            foreach (var builtinHandler in builtinHandlers)
+            {
+                Assert.Null(builtinHandler.ScriptBlock);
+            }
         }
     }
 }

@@ -77,6 +77,11 @@ namespace Microsoft.PowerShell
         public KeyHandlerGroup Group { get; set; }
 
         /// <summary>
+        /// The ScriptBlock bound to this key, if any.
+        /// </summary>
+        public ScriptBlock ScriptBlock { get; set; }
+
+        /// <summary>
         /// Get the description of the group.
         /// </summary>
         public static string GetGroupingDescription(KeyHandlerGroup grouping)
