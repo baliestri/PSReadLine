@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Management.Automation;
+using System.Management.Automation.Language;
 using System.Text;
 using Microsoft.PowerShell;
 using Xunit;
@@ -168,6 +169,103 @@ namespace Test
                                    Tuple.Create(ConsoleColor.Red, ConsoleColor.DarkRed), "> ",
                                    TokenClassification.String, "\"")),
                 '"'), prompt: promptLine);
+        }
+
+        [SkippableFact]
+        public void TokenColorHandlerOverridesColor()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            // TokenColorHandler follows the "null = leave existing value alone" idiom (like
+            // ViModeChangeHandler), so TestSetup's SetOptions call can't clear it back out for
+            // the next test - clear it directly via the live options object when we're done.
+            try
+            {
+                var customColor = Tuple.Create(ConsoleColor.Cyan, ConsoleColor.DarkGray);
+                PSConsoleReadLine.SetOptions(new SetPSReadLineOption
+                {
+                    TokenColorHandler = (token, cursor) =>
+                        (token.TokenFlags & TokenFlags.CommandName) != 0
+                            ? MakeCombinedColor(customColor.Item1, customColor.Item2)
+                            : null
+                });
+
+                Test("", Keys(
+                    "abc -def",
+                    _.Home,
+                    CheckThat(() =>
+                        AssertScreenIs(1,
+                            customColor, "abc",
+                            TokenClassification.None, " ",
+                            TokenClassification.Parameter, "-def")),
+                    _.Ctrl_c,
+                    InputAcceptedNow
+                    ));
+            }
+            finally
+            {
+                PSConsoleReadLine.GetOptions().TokenColorHandler = null;
+            }
+        }
+
+        [SkippableFact]
+        public void TokenColorHandlerCursorAdjacency()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            try
+            {
+                var customColor = Tuple.Create(ConsoleColor.Cyan, ConsoleColor.DarkGray);
+                PSConsoleReadLine.SetOptions(new SetPSReadLineOption
+                {
+                    TokenColorHandler = (token, cursor) =>
+                        (token.TokenFlags & TokenFlags.CommandName) != 0
+                            && cursor >= token.Extent.StartOffset
+                            && cursor <= token.Extent.EndOffset
+                            ? MakeCombinedColor(customColor.Item1, customColor.Item2)
+                            : null
+                });
+
+                // Cursor movement alone (e.g. Home/End) doesn't force a re-render in PSReadLine -
+                // MoveCursor only repositions the terminal cursor. So drive the cursor position
+                // through typing itself, which does force a fresh GenerateRender/GetTokenColor
+                // pass with the updated offset.
+                Test("", Keys(
+                    "abc",
+                    CheckThat(() =>
+                        AssertScreenIs(1,
+                            customColor, "abc")),
+                    " def",
+                    CheckThat(() =>
+                        AssertScreenIs(1,
+                            TokenClassification.Command, "abc",
+                            TokenClassification.None, " def")),
+                    _.Ctrl_c,
+                    InputAcceptedNow
+                    ));
+            }
+            finally
+            {
+                PSConsoleReadLine.GetOptions().TokenColorHandler = null;
+            }
+        }
+
+        [SkippableFact]
+        public void TokenColorHandlerUnsetIsNoOp()
+        {
+            TestSetup(KeyMode.Cmd);
+
+            Test("", Keys(
+                "abc -def",
+                _.Home,
+                CheckThat(() =>
+                    AssertScreenIs(1,
+                        TokenClassification.Command, "abc",
+                        TokenClassification.None, " ",
+                        TokenClassification.Parameter, "-def")),
+                _.Ctrl_c,
+                InputAcceptedNow
+                ));
         }
 
         [SkippableFact]

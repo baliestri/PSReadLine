@@ -126,6 +126,10 @@ namespace Microsoft.PowerShell
             {
                 Options.LineAcceptedHandler = options.LineAcceptedHandler;
             }
+            if (options.TokenColorHandler != null)
+            {
+                Options.TokenColorHandler = options.TokenColorHandler;
+            }
             if (options.HistorySavePath != null)
             {
                 Options.HistorySavePath = options.HistorySavePath;

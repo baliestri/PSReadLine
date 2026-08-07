@@ -328,6 +328,13 @@ namespace Microsoft.PowerShell
         public Action<string, int> LineAcceptedHandler { get; set; }
 
         /// <summary>
+        /// This handler is consulted for each token's color before falling back to the
+        /// built-in TokenKind/TokenFlags-based coloring. Receives the token and the current
+        /// cursor offset; return null or empty to fall through to the default coloring.
+        /// </summary>
+        public Func<Token, int, string> TokenColorHandler { get; set; }
+
+        /// <summary>
         /// Most commands do not accept script blocks, but for those that do,
         /// we want to validate commands in the script block arguments.
         /// Unfortunately, we can't know how the argument is used.  In the worst
@@ -699,6 +706,9 @@ namespace Microsoft.PowerShell
 
         [Parameter]
         public Action<string, int> LineAcceptedHandler { get; set; }
+
+        [Parameter]
+        public Func<Token, int, string> TokenColorHandler { get; set; }
 
         [Parameter]
         public SwitchParameter HistorySearchCursorMovesToEnd

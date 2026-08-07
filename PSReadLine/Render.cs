@@ -1121,6 +1121,12 @@ namespace Microsoft.PowerShell
 
         private string GetTokenColor(Token token)
         {
+            var overrideColor = _options.TokenColorHandler?.Invoke(token, _current);
+            if (!string.IsNullOrEmpty(overrideColor))
+            {
+                return overrideColor;
+            }
+
             if ((token.TokenFlags & TokenFlags.CommandName) != 0)
             {
                 return _options._commandColor;
