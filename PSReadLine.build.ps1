@@ -36,7 +36,7 @@ if (-not $targetFramework) {
 Write-Verbose "Target framework: $targetFramework"
 
 # Final bits to release go here
-$targetDir = "bin/$Configuration/PSLoom.PSReadLine"
+$targetDir = "bin/$Configuration/PSReadLine"
 
 function ConvertTo-CRLF([string] $text) {
     $text.Replace("`r`n","`n").Replace("`n","`r`n")
@@ -44,7 +44,7 @@ function ConvertTo-CRLF([string] $text) {
 
 $binaryModuleParams = @{
     Inputs  = { Get-ChildItem PSReadLine/*.cs, PSReadLine/PSReadLine.csproj, PSReadLine/PSReadLineResources.resx }
-    Outputs = "PSReadLine/bin/$Configuration/$targetFramework/PSLoom.PSReadLine.dll"
+    Outputs = "PSReadLine/bin/$Configuration/$targetFramework/Microsoft.PowerShell.PSReadLine.dll"
 }
 
 $xUnitTestParams = @{
@@ -107,7 +107,7 @@ task LayoutModule BuildMainModule, {
     }
 
     $binPath = "PSReadLine/bin/$Configuration/$targetFramework/publish"
-    Copy-Item $binPath/PSLoom.PSReadLine.dll $targetDir
+    Copy-Item $binPath/Microsoft.PowerShell.PSReadLine.dll $targetDir
     Copy-Item $binPath/Microsoft.PowerShell.Pager.dll $targetDir
 
     if ($Configuration -eq 'Debug') {
@@ -115,8 +115,8 @@ task LayoutModule BuildMainModule, {
     }
 
     # Copy module manifest, but fix the version to match what we've specified in the binary module.
-    $moduleManifestContent = ConvertTo-CRLF (Get-Content -Path 'PSReadLine/PSLoom.PSReadLine.psd1' -Raw)
-    $versionInfo = (Get-ChildItem -Path $targetDir/PSLoom.PSReadLine.dll).VersionInfo
+    $moduleManifestContent = ConvertTo-CRLF (Get-Content -Path 'PSReadLine/PSReadLine.psd1' -Raw)
+    $versionInfo = (Get-ChildItem -Path $targetDir/Microsoft.PowerShell.PSReadLine.dll).VersionInfo
     $version = $versionInfo.FileVersion
     $semVer = $versionInfo.ProductVersion
 
@@ -127,15 +127,15 @@ task LayoutModule BuildMainModule, {
         $prerelease = $matches[2]
 
         # Put the prerelease tag in private data, along with the project URI.
-        $privateDataSection = "PrivateData = @{ PSData = @{ Prerelease = '$prerelease'; ProjectUri = 'https://github.com/baliestri/PSReadLine' } }"
+        $privateDataSection = "PrivateData = @{ PSData = @{ Prerelease = '$prerelease'; ProjectUri = 'https://github.com/PowerShell/PSReadLine' } }"
     } else {
         # Put the project URI in private data.
-        $privateDataSection = "PrivateData = @{ PSData = @{ ProjectUri = 'https://github.com/baliestri/PSReadLine' } }"
+        $privateDataSection = "PrivateData = @{ PSData = @{ ProjectUri = 'https://github.com/PowerShell/PSReadLine' } }"
     }
 
     $moduleManifestContent = [regex]::Replace($moduleManifestContent, "}", "${privateDataSection}$([System.Environment]::Newline)}")
     $moduleManifestContent = [regex]::Replace($moduleManifestContent, "ModuleVersion = '.*'", "ModuleVersion = '$version'")
-    $moduleManifestContent | Set-Content -Path $targetDir/PSLoom.PSReadLine.psd1
+    $moduleManifestContent | Set-Content -Path $targetDir/PSReadLine.psd1
 
     # Make sure we don't ship any read-only files
     foreach ($file in (Get-ChildItem -Recurse -File $targetDir)) {
@@ -163,9 +163,9 @@ task Install LayoutModule, {
 
         try
         {
-            if (Test-Path -Path $InstallDir\PSLoom.PSReadLine)
+            if (Test-Path -Path $InstallDir\PSReadLine)
             {
-                Remove-Item -Recurse -Force $InstallDir\PSLoom.PSReadLine -ErrorAction Stop
+                Remove-Item -Recurse -Force $InstallDir\PSReadLine -ErrorAction Stop
             }
             Copy-Item -Recurse $targetDir $InstallDir
         }
@@ -184,7 +184,7 @@ Synopsis: Publish to PSGallery
 #>
 task Publish -If ($Configuration -eq 'Release') {
 
-    $binDir = "$PSScriptRoot/bin/Release/PSLoom.PSReadLine"
+    $binDir = "$PSScriptRoot/bin/Release/PSReadLine"
 
     # Check signatures before publishing
     Get-ChildItem -Recurse $binDir -Include "*.dll","*.ps*1" | Get-AuthenticodeSignature | ForEach-Object {
@@ -208,7 +208,7 @@ task Publish -If ($Configuration -eq 'Release') {
         }
     }
 
-    $manifest = Import-PowerShellDataFile $binDir/PSLoom.PSReadLine.psd1
+    $manifest = Import-PowerShellDataFile $binDir/PSReadLine.psd1
 
     $version = $manifest.ModuleVersion
     if ($null -ne $manifest.PrivateData)
@@ -235,7 +235,7 @@ task Publish -If ($Configuration -eq 'Release') {
         NuGetApiKey = [PSCredential]::new("user", $nugetApiKey).GetNetworkCredential().Password
         Repository = "PSGallery"
         ReleaseNotes = (Get-Content -Raw $binDir/Changes.txt)
-        ProjectUri = 'https://github.com/baliestri/PSReadLine'
+        ProjectUri = 'https://github.com/PowerShell/PSReadLine'
     }
 
     Publish-Module @publishParams

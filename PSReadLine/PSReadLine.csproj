@@ -3,8 +3,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.PowerShell.PSReadLine</RootNamespace>
-    <AssemblyName>PSLoom.PSReadLine</AssemblyName>
-    <PackageId>PSLoom.PSReadLine</PackageId>
+    <AssemblyName>Microsoft.PowerShell.PSReadLine</AssemblyName>
     <NoWarn>$(NoWarn);CA1416</NoWarn>
     <AssemblyVersion>3.0.0.0</AssemblyVersion>
     <FileVersion>3.0.0</FileVersion>
@@ -25,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="PSLoom.PSReadLine.psd1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="PSReadLine.psd1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="PSReadLine.psm1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="PSReadLine.format.ps1xml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="SamplePSReadLineProfile.ps1" />
