@@ -30,6 +30,10 @@ jobs:
 
       - name: build-zip-release
         run: |
+          if (-not (Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue)) {
+            Register-PSRepository -Default
+          }
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
           Install-Module -Name InvokeBuild -RequiredVersion 3.1.0 -Force -Scope CurrentUser -Repository PSGallery
           Import-Module -Name InvokeBuild -RequiredVersion 3.1.0 -Force
           Invoke-Build -File PSReadLine.build.ps1 -Task ZipRelease -Configuration Release
