@@ -1,4 +1,4 @@
-#requires -Version 7.0
+#requires -Version 5.1
 <#
 .SYNOPSIS
 Installs, updates, or reverts this fork's PSReadLine build in place of whatever
@@ -13,11 +13,14 @@ auto-loading "PSReadLine" by name, now served by the fork's build.
 
 Run with -Uninstall to restore the original module from the backup.
 
+Run this from Windows PowerShell (powershell.exe), not pwsh - pwsh always auto-loads its
+own PSReadLine, so a pwsh process running this script is always holding a lock on the
+very files it needs to replace. powershell.exe never loads pwsh's PSReadLine, so it never
+self-locks. Any *other* pwsh processes can still hold the lock on those files though -
+this script checks for and refuses to run while any are found; close them first.
+
 Changes only take effect in a *new* pwsh session - files on disk don't affect a module
-already loaded in memory in the current process. If the *current* session turns out to
-be the one holding the lock (common, since PSReadLine is normally auto-loaded), this
-script schedules itself to retry once this process exits, then exits immediately - no
-manual "close every window" dance needed for that case.
+already loaded in memory in a running process.
 
 .PARAMETER Repository
 The GitHub repository ("owner/name") the release is published under.
@@ -45,14 +48,21 @@ $ScriptSource = $MyInvocation.MyCommand.Definition
 $MaxAutoRetries = 3
 
 function Get-TargetModuleDir {
-    $module = Get-Module -Name PSReadLine
-    if (-not $module) {
-        $module = Get-Module -Name PSReadLine -ListAvailable | Select-Object -First 1
+    # This script is meant to run under Windows PowerShell (powershell.exe), not pwsh, so
+    # pwsh never holds a self-lock on the files it's about to replace. But that also means
+    # *this* process's own Get-Module would resolve powershell.exe's own PSReadLine (a
+    # different install, e.g. under System32\WindowsPowerShell), not the one pwsh actually
+    # auto-loads - so ask a real pwsh subprocess where it resolves PSReadLine from instead.
+    if (-not (Get-Command pwsh -ErrorAction SilentlyContinue)) {
+        throw "pwsh (PowerShell 7+) was not found on PATH - it's needed to resolve which PSReadLine pwsh actually auto-loads."
     }
-    if (-not $module) {
-        throw "No PSReadLine module found (neither loaded nor available via `$env:PSModulePath)."
+
+    $query = 'if ($m = Get-Module -Name PSReadLine) { $m.Path } elseif ($m = Get-Module -Name PSReadLine -ListAvailable | Select-Object -First 1) { $m.Path }'
+    $modulePath = & pwsh -NoProfile -NonInteractive -Command $query
+    if (-not $modulePath) {
+        throw "No PSReadLine module found via pwsh (neither loaded nor available via its `$env:PSModulePath)."
     }
-    return Split-Path $module.Path -Parent
+    return Split-Path $modulePath -Parent
 }
 
 function Assert-Elevated {
@@ -70,6 +80,20 @@ function Assert-Elevated {
     if (-not $isAdmin) {
         throw "'$Path' is under Program Files and requires elevation. Re-run this script from an Administrator session."
     }
+}
+
+function Assert-NoOtherPwshSessions {
+    # pwsh always auto-loads its own PSReadLine, so any running pwsh process is a
+    # candidate for holding a lock on the files this script needs to replace - including
+    # this one, if it's somehow running under pwsh instead of the recommended
+    # powershell.exe. Fail fast and ask the user to close them, rather than silently
+    # retrying against a lock that a *different* process controls.
+    $pwshProcesses = Get-Process -Name pwsh -ErrorAction SilentlyContinue
+    if (-not $pwshProcesses) { return }
+
+    $list = $pwshProcesses | ForEach-Object { "  PID $($_.Id): $($_.Path)" }
+    throw "Found running pwsh (PowerShell 7+) session(s) that may hold a lock on PSReadLine's files. " +
+        "Close them, then re-run this script from Windows PowerShell (powershell.exe), not pwsh:`n$($list -join "`n")"
 }
 
 function Invoke-RetryAfterExit {
@@ -255,6 +279,8 @@ function Invoke-Install {
 
     Write-Host "Installed the fork build at '$TargetDir'. Restart your pwsh session to pick it up." -ForegroundColor Green
 }
+
+Assert-NoOtherPwshSessions
 
 $targetDir = Get-TargetModuleDir
 $backupDir = "$targetDir.bkp"
