@@ -1,0 +1,57 @@
+name: Release fork build
+
+on:
+  # Manual only - dispatch this from the `fork` branch when you want to cut a new build.
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: pwsh
+
+env:
+  POWERSHELL_TELEMETRY_OPTOUT: 1
+  RELEASE_TAG: fork-latest
+
+jobs:
+  build-and-publish:
+    name: Build Release and publish rolling release
+    timeout-minutes: 20
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup-dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: install-invokebuild
+        run: Install-Module -Name InvokeBuild -RequiredVersion 3.1.0 -Force -Scope CurrentUser
+
+      - name: build-zip-release
+        run: Invoke-Build -File PSReadLine.build.ps1 -Task ZipRelease -Configuration Release
+
+      - name: publish-rolling-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $zipPath = Get-ChildItem -Path "bin/Release" -Filter "*.zip" | Select-Object -First 1 -ExpandProperty FullName
+          if (-not $zipPath) { throw "No release zip found under bin/Release" }
+
+          $shortSha = "${{ github.sha }}".Substring(0, 7)
+          $notes = "Automated build from branch ``fork`` @ $shortSha ($(Get-Date -AsUTC -Format 'yyyy-MM-dd HH:mm') UTC).`n`nThis is a rolling pre-release: the asset under this tag is replaced on every run."
+
+          $existing = gh release view $env:RELEASE_TAG 2>$null
+          if ($LASTEXITCODE -eq 0) {
+              gh release upload $env:RELEASE_TAG $zipPath --clobber
+              gh release edit $env:RELEASE_TAG --target fork --notes $notes
+          } else {
+              gh release create $env:RELEASE_TAG $zipPath `
+                --title "PSReadLine (fork build)" `
+                --target fork `
+                --prerelease `
+                --notes $notes
+          }

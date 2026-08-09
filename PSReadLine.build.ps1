@@ -147,7 +147,7 @@ task LayoutModule BuildMainModule, {
 Synopsis: Zip up the binary for release.
 #>
 task ZipRelease LayoutModule, {
-    Compress-Archive -Force -LiteralPath $targetDir -DestinationPath "bin/$Configuration/PSReadLine.zip"
+    Compress-Archive -Force -LiteralPath $targetDir -DestinationPath "bin/$Configuration/$(Split-Path -Leaf $targetDir).zip"
 }
 
 <#
