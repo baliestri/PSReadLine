@@ -72,9 +72,18 @@ function Invoke-WithLockGuard {
     try {
         & $Action
     } catch {
+        $runningSessions = Get-Process -Name pwsh, powershell -ErrorAction SilentlyContinue |
+            Where-Object Id -ne $PID |
+            ForEach-Object { "  PID $($_.Id): $($_.Path)" }
+        $sessionsHint = if ($runningSessions) {
+            "Other PowerShell processes currently running (likely holding the lock):`n$($runningSessions -join "`n")"
+        } else {
+            "No other pwsh/powershell processes were found running under this user - the lock may belong to a session running elevated or as another user."
+        }
+
         throw "Failed to $Verb '$Path' - it looks like a file inside is still in use (locked by a running pwsh/powershell process). " +
-            "Close every other PowerShell session that has PSReadLine loaded, then re-run this script non-interactively, e.g.: " +
-            "pwsh -NoProfile -NonInteractive -File `"$PSCommandPath`". Original error: $($_.Exception.Message)"
+            "Close every other PowerShell session that has PSReadLine loaded, then try again from a fresh 'pwsh -NoProfile -NonInteractive' session. " +
+            "$sessionsHint`nOriginal error: $($_.Exception.Message)"
     }
 }
 
