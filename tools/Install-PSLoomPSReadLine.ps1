@@ -149,6 +149,18 @@ function Invoke-Install {
             Remove-Item -LiteralPath $TargetDir -Recurse -Force
         }
         Move-Item -LiteralPath $moduleSource.FullName -Destination $TargetDir
+
+        # PowerShellGet-style installs keep modules under a version-numbered folder (e.g.
+        # ...\PSReadLine\2.4.5\). The fork's shipped ModuleVersion (3.0.0) won't match that
+        # folder name, which confuses module resolution - align the manifest to whatever
+        # version folder it's actually sitting in.
+        $targetVersion = Split-Path -Leaf $TargetDir
+        if ($targetVersion -match '^\d+(\.\d+){1,3}$') {
+            $manifestPath = Join-Path $TargetDir 'PSReadLine.psd1'
+            $manifestContent = Get-Content -LiteralPath $manifestPath -Raw
+            $patched = $manifestContent -replace "ModuleVersion\s*=\s*'[^']*'", "ModuleVersion = '$targetVersion'"
+            Set-Content -LiteralPath $manifestPath -Value $patched -NoNewline
+        }
     } finally {
         Remove-Item -LiteralPath $tempDir -Recurse -Force -ErrorAction SilentlyContinue
     }
