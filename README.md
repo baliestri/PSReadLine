@@ -1,14 +1,35 @@
-# PSLoom.PSReadLine
+# PSReadLine (baliestri fork)
 
-This is a fork of [`PowerShell/PSReadLine`](https://github.com/PowerShell/PSReadLine), packaged
-and distributed under its own identity, `PSLoom.PSReadLine`. It exists to give
-[PSLoom](https://github.com/baliestri)'s `Hooks` and `SyntaxHighlighting` subsystems extensibility
-points that upstream `PSReadLine` doesn't expose yet.
+This is a fork of [`PowerShell/PSReadLine`](https://github.com/PowerShell/PSReadLine). It exists to
+give [PSLoom](https://github.com/baliestri)'s `Hooks` and `SyntaxHighlighting` subsystems
+extensibility points that upstream `PSReadLine` doesn't expose yet.
 
-The public C# namespace and types (`Microsoft.PowerShell.PSConsoleReadLine`, etc.) are
-**unchanged** from upstream - only the distribution identity (assembly name, module manifest,
-module GUID) is renamed. That is deliberate: it lets PSLoom depend on this fork today, and drop it
-again later for the official module, without touching any call site.
+The assembly, module manifest, and public C# namespace/types (`Microsoft.PowerShell.PSConsoleReadLine`,
+etc.) are **unchanged** from upstream - this fork still ships and loads as `PSReadLine`. Builds are
+published as GitHub releases and installed with
+[`tools/Install-PSLoomPSReadLine.ps1`](tools/Install-PSLoomPSReadLine.ps1), which backs up whatever
+`PSReadLine` `pwsh` would otherwise auto-load (including the one bundled with the PowerShell
+installation itself) and replaces it in place with this fork's build - so `pwsh` keeps loading
+"PSReadLine" as usual, without any `$PROFILE` changes.
+
+## Installing / uninstalling
+
+Run from a `pwsh` session that hasn't already loaded `PSReadLine` itself (`-NoProfile -NonInteractive`
+avoids that), elevated if the resolved `PSReadLine` lives under `Program Files`:
+
+```powershell
+pwsh -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1')))"
+```
+
+To revert back to the original `PSReadLine`:
+
+```powershell
+pwsh -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1'))) -Uninstall"
+```
+
+Either way, restart your `pwsh` session afterwards - the change only takes effect in a new process.
+See [`tools/Install-PSLoomPSReadLine.ps1`](tools/Install-PSLoomPSReadLine.ps1) for what it actually
+does (backup, download, `-WhatIf`/`-Confirm` support, etc.).
 
 ## Why a separate fork instead of waiting on upstream
 
@@ -192,7 +213,7 @@ After build, the produced artifacts can be found at `<your-local-repo-root>/bin/
 
 In order to isolate your imported module to the one locally built, be sure to run 
 `pwsh -NonInteractive -NoProfile` to not automatically load the default PSReadLine module installed.
-Then, load the locally built module by `Import-Module <your-local-repo-root>/bin/Debug/PSLoom.PSReadLine/PSLoom.PSReadLine.psd1`.
+Then, load the locally built module by `Import-Module <your-local-repo-root>/bin/Debug/PSReadLine/PSReadLine.psd1`.
 
 ## Change Log
 
@@ -201,7 +222,7 @@ This fork's own changes are tracked as issues [#1](https://github.com/baliestri/
 
 ## Licensing
 
-PSLoom.PSReadLine is licensed under the [2-Clause BSD License][], same as upstream `PSReadLine`.
+This fork is licensed under the [2-Clause BSD License][], same as upstream `PSReadLine`.
 
 ## Code of Conduct
 
