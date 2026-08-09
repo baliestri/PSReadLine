@@ -34,8 +34,10 @@ jobs:
             Register-PSRepository -Default
           }
           Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
-          Install-Module -Name InvokeBuild -RequiredVersion 3.1.0 -Force -Scope CurrentUser -Repository PSGallery
-          Import-Module -Name InvokeBuild -RequiredVersion 3.1.0 -Force
+          # 3.1.0 (the version documented in PSReadLine.build.ps1's header for local dev) predates
+          # PowerShell 7.4's -ProgressAction common parameter and collides with it - use latest.
+          Install-Module -Name InvokeBuild -Force -Scope CurrentUser -Repository PSGallery
+          Import-Module -Name InvokeBuild -Force
           Invoke-Build -File PSReadLine.build.ps1 -Task ZipRelease -Configuration Release
 
       - name: publish-rolling-release
