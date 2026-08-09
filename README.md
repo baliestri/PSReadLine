@@ -14,17 +14,19 @@ installation itself) and replaces it in place with this fork's build - so `pwsh`
 
 ## Installing / uninstalling
 
-Run from a `pwsh` session that hasn't already loaded `PSReadLine` itself (`-NoProfile -NonInteractive`
-avoids that), elevated if the resolved `PSReadLine` lives under `Program Files`:
+Run from **Windows PowerShell** (`powershell.exe`), not `pwsh` - `pwsh` always auto-loads its own
+`PSReadLine`, so a `pwsh` process running the installer is always holding a lock on the very files
+it needs to replace. Close any other running `pwsh` sessions first (the script checks and refuses to
+run while it finds one), then, elevated if the resolved `PSReadLine` lives under `Program Files`:
 
 ```powershell
-pwsh -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1')))"
+powershell -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1')))"
 ```
 
 To revert back to the original `PSReadLine`:
 
 ```powershell
-pwsh -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1'))) -Uninstall"
+powershell -NoProfile -NonInteractive -Command "& ([scriptblock]::Create((Invoke-RestMethod 'https://raw.githubusercontent.com/baliestri/PSReadLine/fork/tools/Install-PSLoomPSReadLine.ps1'))) -Uninstall"
 ```
 
 Either way, restart your `pwsh` session afterwards - the change only takes effect in a new process.
